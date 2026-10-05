@@ -29,16 +29,21 @@ export class VercelBlobResumeArtifactStore implements ResumeArtifactStore {
   ): Promise<StoredResumeArtifact | null> {
     if (!isBlobConfigured()) return null;
 
-    const extension = extname(upload.name).toLocaleLowerCase();
-    const name = safeFilename(upload.name);
-    const blobPath = `career-autopilot/resumes/${sha256}${extension || `-${name}`}`;
-    await put(blobPath, Buffer.from(upload.bytes), {
-      access: "public",
-      addRandomSuffix: false,
-      allowOverwrite: true,
-      contentType: mediaType,
-    });
-    return { blobPath };
+    try {
+      const extension = extname(upload.name).toLocaleLowerCase();
+      const name = safeFilename(upload.name);
+      const blobPath = `career-autopilot/resumes/${sha256}${extension || `-${name}`}`;
+      await put(blobPath, Buffer.from(upload.bytes), {
+        access: "private",
+        addRandomSuffix: false,
+        allowOverwrite: true,
+        contentType: mediaType,
+      });
+      return { blobPath };
+    } catch (error) {
+      console.error("Failed to store resume artifact in Vercel Blob:", error);
+      throw new Error(`Resume upload failed: ${error instanceof Error ? error.message : "Unknown error"}`);
+    }
   }
 }
 
