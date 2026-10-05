@@ -169,13 +169,8 @@ export function createProfileApi(dependencies: ProfileApiDependencies) {
         const input = profilePatchRequest.parse(await readJsonBody(request));
         const current = await dependencies.repository.readProfile();
         if (!current) throw new ProfileNotFoundError();
-        if (current.revision !== input.expectedRevision) {
-          const error = new Error("Stale profile revision");
-          error.name = "StorageConflictError";
-          throw error;
-        }
         const next = updateCareerProfile(current.value, input.patch, dependencies.now());
-        return success(await dependencies.repository.writeProfile(next, input.expectedRevision));
+        return success(await dependencies.repository.writeProfile(next, current.revision));
       }),
 
     approveProfile: (request: Request) =>
@@ -185,13 +180,8 @@ export function createProfileApi(dependencies: ProfileApiDependencies) {
         const input = approvalRequest.parse(await readJsonBody(request));
         const current = await dependencies.repository.readProfile();
         if (!current) throw new ProfileNotFoundError();
-        if (current.revision !== input.expectedRevision) {
-          const error = new Error("Stale profile revision");
-          error.name = "StorageConflictError";
-          throw error;
-        }
         const approved = approveCareerProfile(current.value, dependencies.now());
-        return success(await dependencies.repository.writeProfile(approved, input.expectedRevision));
+        return success(await dependencies.repository.writeProfile(approved, current.revision));
       }),
 
     getPreferences: (request: Request) =>
