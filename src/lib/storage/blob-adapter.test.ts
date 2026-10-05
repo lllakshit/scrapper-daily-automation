@@ -16,7 +16,10 @@ import { VercelBlobStorageAdapter } from "./blob-adapter";
 import { StorageConflictError } from "./store";
 
 describe("VercelBlobStorageAdapter", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.stubEnv("BLOB_READ_WRITE_TOKEN", "test-blob-token");
+  });
 
   it("reads private, uncached JSON", async () => {
     blobMocks.get.mockResolvedValue({
@@ -57,5 +60,15 @@ describe("VercelBlobStorageAdapter", () => {
     const adapter = new VercelBlobStorageAdapter("custom-prefix");
     await adapter.delete("profile");
     expect(blobMocks.del).toHaveBeenCalledWith("custom-prefix/profile.json");
+  });
+
+  it("reports missing Vercel Blob configuration only when storage is used", async () => {
+    vi.stubEnv("BLOB_READ_WRITE_TOKEN", "");
+    const adapter = new VercelBlobStorageAdapter();
+
+    await expect(adapter.read("profile")).rejects.toThrow(
+      "BLOB_READ_WRITE_TOKEN is required on Vercel",
+    );
+    expect(blobMocks.get).not.toHaveBeenCalled();
   });
 });

@@ -29,9 +29,6 @@ function createDefaultStore(): VersionedJsonStore {
     return new VersionedJsonStore(new InMemoryStorageAdapter());
   }
   if (process.env.VERCEL === "1") {
-    if (!process.env.BLOB_READ_WRITE_TOKEN) {
-      throw new Error("BLOB_READ_WRITE_TOKEN is required on Vercel");
-    }
     return new VersionedJsonStore(new VercelBlobStorageAdapter());
   }
   const directory = process.env.APP_DATA_DIRECTORY

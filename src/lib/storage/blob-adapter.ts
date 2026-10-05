@@ -15,7 +15,14 @@ export class VercelBlobStorageAdapter implements StorageAdapter {
     return `${this.prefix}/${key}.json`;
   }
 
+  private assertConfigured(): void {
+    if (!process.env.BLOB_READ_WRITE_TOKEN) {
+      throw new Error("BLOB_READ_WRITE_TOKEN is required on Vercel");
+    }
+  }
+
   async read(key: string): Promise<RawStoredValue | null> {
+    this.assertConfigured();
     const result = await get(this.pathname(key), { access: "private", useCache: false });
     if (!result || result.statusCode === 304 || !result.stream) return null;
     return {
@@ -25,6 +32,7 @@ export class VercelBlobStorageAdapter implements StorageAdapter {
   }
 
   async write(key: string, content: string, options: RawWriteOptions): Promise<void> {
+    this.assertConfigured();
     try {
       await put(this.pathname(key), content, {
         access: "private",
@@ -44,6 +52,7 @@ export class VercelBlobStorageAdapter implements StorageAdapter {
   }
 
   async delete(key: string): Promise<void> {
+    this.assertConfigured();
     await del(this.pathname(key));
   }
 }
