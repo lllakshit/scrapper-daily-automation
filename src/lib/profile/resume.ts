@@ -125,10 +125,12 @@ async function parseText(upload: UploadedResume, kind: ResumeKind): Promise<stri
 
     installPdfJsNodeGlobals();
     const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
-    const document = await pdfjs.getDocument({
+    const loadParameters = {
       data: upload.bytes,
+      disableWorker: true,
       useSystemFonts: true,
-    }).promise;
+    } as Parameters<typeof pdfjs.getDocument>[0] & { disableWorker: boolean };
+    const document = await pdfjs.getDocument(loadParameters).promise;
     try {
       const pages: string[] = [];
       for (let pageNumber = 1; pageNumber <= document.numPages; pageNumber += 1) {
