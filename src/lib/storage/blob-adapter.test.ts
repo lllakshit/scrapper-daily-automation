@@ -39,14 +39,14 @@ describe("VercelBlobStorageAdapter", () => {
     });
   });
 
-  it("uses ETags for conditional writes and maps conflicts", async () => {
+  it("overwrites after store-level revision validation and maps Blob conflicts", async () => {
     blobMocks.put.mockResolvedValue({});
     const adapter = new VercelBlobStorageAdapter();
     await adapter.write("profile", "{}", { expectedVersionTag: "etag-1" });
     expect(blobMocks.put).toHaveBeenCalledWith(
       "career-autopilot/data/profile.json",
       "{}",
-      expect.objectContaining({ access: "public", ifMatch: "etag-1" }),
+      expect.objectContaining({ access: "public", allowOverwrite: true }),
     );
 
     blobMocks.put.mockRejectedValue(new BlobPreconditionFailedError());

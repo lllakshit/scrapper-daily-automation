@@ -37,11 +37,8 @@ export class VercelBlobStorageAdapter implements StorageAdapter {
       await put(this.pathname(key), content, {
         access: "public",
         addRandomSuffix: false,
-        allowOverwrite: options.expectedVersionTag !== null,
+        allowOverwrite: true,
         contentType: "application/json; charset=utf-8",
-        ...(options.expectedVersionTag
-          ? { ifMatch: options.expectedVersionTag }
-          : {}),
       });
     } catch (error) {
       if (error instanceof BlobPreconditionFailedError) {
