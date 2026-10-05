@@ -1,5 +1,4 @@
 import { createHash, randomUUID } from "node:crypto";
-import { createRequire } from "node:module";
 import { basename, extname } from "node:path";
 
 import type { CareerProfile } from "./schemas";
@@ -7,7 +6,6 @@ import { createEmptyCareerProfile, CareerProfileSchema } from "./schemas";
 
 export const MAX_RESUME_BYTES = 5 * 1024 * 1024;
 const MAX_EXTRACTED_CHARACTERS = 150_000;
-const require = createRequire(import.meta.url);
 
 export type ResumeKind = "pdf" | "docx" | "txt";
 export type UploadedResume = Readonly<{ name: string; type: string; bytes: Uint8Array }>;
@@ -91,12 +89,29 @@ async function parseText(upload: UploadedResume, kind: ResumeKind): Promise<stri
       return result.value;
     }
 
-    const { PDFParse } = require("pdf-parse") as typeof import("pdf-parse");
-    const parser = new PDFParse({ data: upload.bytes });
+    const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
+    const document = await pdfjs.getDocument({
+      data: upload.bytes,
+      useSystemFonts: true,
+    }).promise;
     try {
-      return (await parser.getText()).text;
+      const pages: string[] = [];
+      for (let pageNumber = 1; pageNumber <= document.numPages; pageNumber += 1) {
+        const page = await document.getPage(pageNumber);
+        const content = await page.getTextContent({
+          includeMarkedContent: false,
+          disableNormalization: false,
+        });
+        pages.push(
+          content.items
+            .map((item) => ("str" in item && typeof item.str === "string" ? item.str : ""))
+            .filter(Boolean)
+            .join(" "),
+        );
+      }
+      return pages.join("\n");
     } finally {
-      await parser.destroy();
+      await document.destroy();
     }
   } catch (error) {
     if (error instanceof ResumeValidationError) throw error;
