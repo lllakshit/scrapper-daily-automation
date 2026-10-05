@@ -117,21 +117,28 @@ export function ProfileSetup() {
 
   async function saveProfile(approve = false) {
     try {
-      const response = await fetch("/api/profile", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ expectedRevision: profileRevision, patch: { personal: { name, email, location: "Jaipur, India" }, professional: { currentTitle: title, yearsOfExperience: years, summary, targetRoles: selectedRoles } } }) });
-      if (!response.ok) throw new Error();
+      const revision = await currentProfileRevision();
+      const response = await fetch("/api/profile", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ expectedRevision: revision, patch: { personal: { name, email, location: "Jaipur, India" }, professional: { currentTitle: title, yearsOfExperience: years, summary, targetRoles: selectedRoles } } }) });
+      if (!response.ok) {
+        const body = await response.json().catch(() => null);
+        throw new Error(body?.error?.message ?? "Profile could not be saved");
+      }
       const updated = (await response.json()).data;
       setProfileRevision(updated.revision);
       setProfileStatus(updated.value.status);
       if (approve) {
         const approval = await fetch("/api/profile/approve", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ expectedRevision: updated.revision }) });
-        if (!approval.ok) throw new Error();
+        if (!approval.ok) {
+          const body = await approval.json().catch(() => null);
+          throw new Error(body?.error?.message ?? "Profile could not be approved");
+        }
         const approved = (await approval.json()).data;
         setProfileRevision(approved.revision);
         setProfileStatus("approved");
         setActiveStep("preferences");
         toast.success("Profile approved", { description: "Job matching can now use these verified details." });
       } else toast.success("Profile saved");
-    } catch { toast.error("Profile could not be saved", { description: "Review the fields and try again." }); }
+    } catch (error) { toast.error("Profile could not be saved", { description: error instanceof Error ? error.message : "Review the fields and try again." }); }
   }
 
   async function savePreferences() {
