@@ -129,7 +129,7 @@ async function parseText(upload: UploadedResume, kind: ResumeKind): Promise<stri
     const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
     pdfjs.GlobalWorkerOptions.workerSrc = pathToFileURL(PDF_WORKER_PATH).href;
     const loadParameters = {
-      data: upload.bytes,
+      data: upload.bytes.slice(),
       disableWorker: true,
       useSystemFonts: true,
     } as Parameters<typeof pdfjs.getDocument>[0] & { disableWorker: boolean };
@@ -255,8 +255,8 @@ export async function extractResume(
   options: { now?: () => string } = {},
 ): Promise<{ profile: CareerProfile; text: string; sha256: string }> {
   const { kind, mediaType } = validateResumeUpload(upload);
-  const text = normalizeText(await parseText(upload, kind));
   const sha256 = createHash("sha256").update(upload.bytes).digest("hex");
+  const text = normalizeText(await parseText(upload, kind));
   const now = options.now?.() ?? new Date().toISOString();
   return { profile: buildDraft(text, upload, mediaType, now, sha256), text, sha256 };
 }
