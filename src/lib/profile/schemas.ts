@@ -41,6 +41,7 @@ export const ResumeSourceSchema = z
     ]),
     size: z.number().int().positive(),
     sha256: z.string().regex(/^[a-f0-9]{64}$/),
+    blobPath: trimmedString(300).optional(),
     extractedAt: isoTimestamp,
   })
   .strict();

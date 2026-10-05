@@ -25,6 +25,9 @@ function dependencies(overrides: Partial<ProfileApiDependencies> = {}): ProfileA
       })),
     },
     extract: vi.fn(),
+    resumeArtifacts: {
+      save: vi.fn().mockResolvedValue(null),
+    },
     ...overrides,
   };
 }
@@ -129,6 +132,50 @@ describe("profile API", () => {
     expect(response.status).toBe(201);
     expect(body).not.toContain("private resume contents");
     expect(deps.repository.writeProfile).toHaveBeenCalledWith(profile, 0);
+  });
+
+  it("saves a private resume artifact reference with the extracted profile", async () => {
+    const profile = {
+      ...createEmptyCareerProfile("2026-10-03T10:00:00.000Z"),
+      resumeSource: {
+        originalName: "resume.txt",
+        mediaType: "text/plain" as const,
+        size: 4,
+        sha256: "a".repeat(64),
+        extractedAt: "2026-10-03T10:00:00.000Z",
+      },
+    };
+    const deps = dependencies({
+      extract: vi.fn().mockResolvedValue({ profile, text: "Asha", sha256: "a".repeat(64) }),
+      resumeArtifacts: {
+        save: vi.fn().mockResolvedValue({ blobPath: "career-autopilot/resumes/resume.txt" }),
+      },
+    });
+    const form = new FormData();
+    form.set("resume", new File(["Asha"], "resume.txt", { type: "text/plain" }));
+
+    const response = await createProfileApi(deps).uploadResume(
+      new Request("https://app.example/api/resume", {
+        method: "POST",
+        headers: { origin: "https://app.example", "content-length": "1024" },
+        body: form,
+      }),
+    );
+
+    expect(response.status).toBe(201);
+    expect(deps.resumeArtifacts.save).toHaveBeenCalledWith(
+      expect.objectContaining({ name: "resume.txt" }),
+      expect.stringMatching(/^[a-f0-9]{64}$/),
+      "text/plain",
+    );
+    expect(deps.repository.writeProfile).toHaveBeenCalledWith(
+      expect.objectContaining({
+        resumeSource: expect.objectContaining({
+          blobPath: "career-autopilot/resumes/resume.txt",
+        }),
+      }),
+      0,
+    );
   });
 
   it("requires the current revision when replacing a resume", async () => {

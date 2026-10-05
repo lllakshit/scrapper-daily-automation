@@ -98,6 +98,10 @@ async function parseText(upload: UploadedResume, kind: ResumeKind): Promise<stri
     }
   } catch (error) {
     if (error instanceof ResumeValidationError) throw error;
+    console.error("Resume parser failed", {
+      name: error instanceof Error ? error.name : "UnknownError",
+      message: error instanceof Error ? error.message : String(error),
+    });
     throw new ResumeValidationError("The resume could not be read safely", "PARSER_FAILED");
   }
 }

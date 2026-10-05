@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+
 import { z } from "zod";
 import { JsonRequestError, readJsonBody } from "@/lib/http/read-json";
 
@@ -5,8 +7,10 @@ import {
   extractResume,
   MAX_RESUME_BYTES,
   ResumeValidationError,
+  validateResumeUpload,
   type UploadedResume,
 } from "./resume";
+import type { ResumeArtifactStore } from "./resume-artifacts";
 import {
   CareerPreferencesSchema,
   CareerProfilePatchSchema,
@@ -40,6 +44,7 @@ export interface ProfileApiDependencies {
   readonly repository: ProfileRepository;
   readonly now: () => string;
   readonly extract: ResumeExtraction;
+  readonly resumeArtifacts: ResumeArtifactStore;
 }
 
 const profilePatchRequest = z
@@ -215,8 +220,19 @@ export function createProfileApi(dependencies: ProfileApiDependencies) {
         if (expectedRevision !== undefined && expectedRevision !== revision) {
           return failure(409, "STALE_REVISION", "This profile changed. Refresh and try again.");
         }
+        const { mediaType } = validateResumeUpload(upload);
+        const sha256 = createHash("sha256").update(upload.bytes).digest("hex");
+        const artifact = await dependencies.resumeArtifacts.save(upload, sha256, mediaType);
         const extracted = await dependencies.extract(upload, { now: dependencies.now });
-        const record = await dependencies.repository.writeProfile(extracted.profile, revision);
+        const profile = artifact
+          ? {
+              ...extracted.profile,
+              resumeSource: extracted.profile.resumeSource
+                ? { ...extracted.profile.resumeSource, blobPath: artifact.blobPath }
+                : null,
+            }
+          : extracted.profile;
+        const record = await dependencies.repository.writeProfile(profile, revision);
         return success(record, 201);
       }),
   };
