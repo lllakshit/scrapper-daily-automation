@@ -75,7 +75,12 @@ function errorResponse(error: unknown): Response {
     return failure(error.status, error.code, error.message);
   }
   if (error instanceof ResumeValidationError) {
-    return failure(error.code === "REQUEST_SIZE_REQUIRED" ? 411 : 400, error.code, error.message);
+    return failure(
+      error.code === "REQUEST_SIZE_REQUIRED" ? 411 : 400,
+      error.code,
+      error.message,
+      error.diagnostic ? { diagnostic: error.diagnostic } : undefined,
+    );
   }
   if (error instanceof SyntaxError) {
     return failure(400, "INVALID_JSON", "The request body must be valid JSON");

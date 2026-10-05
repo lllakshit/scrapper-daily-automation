@@ -28,6 +28,7 @@ export class ResumeValidationError extends Error {
       | "EMPTY_TEXT"
       | "REQUEST_SIZE_REQUIRED"
       | "PARSER_FAILED",
+    readonly diagnostic?: string,
   ) {
     super(message);
     this.name = "ResumeValidationError";
@@ -119,7 +120,11 @@ async function parseText(upload: UploadedResume, kind: ResumeKind): Promise<stri
       name: error instanceof Error ? error.name : "UnknownError",
       message: error instanceof Error ? error.message : String(error),
     });
-    throw new ResumeValidationError("The resume could not be read safely", "PARSER_FAILED");
+    throw new ResumeValidationError(
+      "The resume could not be read safely",
+      "PARSER_FAILED",
+      error instanceof Error ? `${error.name}: ${error.message}` : String(error),
+    );
   }
 }
 
