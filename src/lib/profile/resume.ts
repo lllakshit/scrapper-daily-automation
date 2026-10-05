@@ -1,6 +1,5 @@
 import { createHash, randomUUID } from "node:crypto";
-import { createRequire } from "node:module";
-import { basename, extname } from "node:path";
+import { basename, extname, join } from "node:path";
 import { pathToFileURL } from "node:url";
 
 import type { CareerProfile } from "./schemas";
@@ -8,7 +7,7 @@ import { createEmptyCareerProfile, CareerProfileSchema } from "./schemas";
 
 export const MAX_RESUME_BYTES = 5 * 1024 * 1024;
 const MAX_EXTRACTED_CHARACTERS = 150_000;
-const require = createRequire(import.meta.url);
+const PDF_WORKER_PATH = join(process.cwd(), "node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs");
 
 export type ResumeKind = "pdf" | "docx" | "txt";
 export type UploadedResume = Readonly<{ name: string; type: string; bytes: Uint8Array }>;
@@ -128,9 +127,7 @@ async function parseText(upload: UploadedResume, kind: ResumeKind): Promise<stri
 
     installPdfJsNodeGlobals();
     const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
-    pdfjs.GlobalWorkerOptions.workerSrc = pathToFileURL(
-      require.resolve("pdfjs-dist/legacy/build/pdf.worker.mjs"),
-    ).href;
+    pdfjs.GlobalWorkerOptions.workerSrc = pathToFileURL(PDF_WORKER_PATH).href;
     const loadParameters = {
       data: upload.bytes,
       disableWorker: true,
