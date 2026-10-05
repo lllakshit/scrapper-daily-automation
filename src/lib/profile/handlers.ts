@@ -97,12 +97,7 @@ function errorResponse(error: unknown): Response {
   if (error instanceof Error && error.name === "StorageConflictError") {
     return failure(409, "STALE_REVISION", "This data changed in another session. Refresh and try again.");
   }
-  return failure(
-    500,
-    "INTERNAL_ERROR",
-    "The request could not be completed",
-    error instanceof Error ? { diagnostic: `${error.name}: ${error.message}` } : undefined,
-  );
+  return failure(500, "INTERNAL_ERROR", "The request could not be completed");
 }
 
 class ProfileNotFoundError extends Error {}
