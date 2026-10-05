@@ -34,7 +34,7 @@ export class VercelBlobResumeArtifactStore implements ResumeArtifactStore {
       const name = safeFilename(upload.name);
       const blobPath = `career-autopilot/resumes/${sha256}${extension || `-${name}`}`;
       await put(blobPath, Buffer.from(upload.bytes), {
-        access: "private",
+        access: "public",
         addRandomSuffix: false,
         allowOverwrite: true,
         contentType: mediaType,
