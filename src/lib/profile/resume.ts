@@ -79,6 +79,39 @@ function startsWith(bytes: Uint8Array, signature: readonly number[]): boolean {
   return signature.every((value, index) => bytes[index] === value);
 }
 
+function installPdfJsNodeGlobals(): void {
+  const target = globalThis as unknown as {
+    DOMMatrix?: new (init?: readonly number[] | string) => {
+      a: number;
+      b: number;
+      c: number;
+      d: number;
+      e: number;
+      f: number;
+    };
+  };
+  if (target.DOMMatrix) return;
+  class MinimalDOMMatrix {
+    a = 1;
+    b = 0;
+    c = 0;
+    d = 1;
+    e = 0;
+    f = 0;
+
+    constructor(init?: readonly number[] | string) {
+      if (Array.isArray(init) && init.length >= 6) {
+        [this.a, this.b, this.c, this.d, this.e, this.f] = init;
+      }
+    }
+  }
+  Object.defineProperty(globalThis, "DOMMatrix", {
+    configurable: true,
+    writable: true,
+    value: MinimalDOMMatrix,
+  });
+}
+
 async function parseText(upload: UploadedResume, kind: ResumeKind): Promise<string> {
   try {
     if (kind === "txt") {
@@ -90,6 +123,7 @@ async function parseText(upload: UploadedResume, kind: ResumeKind): Promise<stri
       return result.value;
     }
 
+    installPdfJsNodeGlobals();
     const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
     const document = await pdfjs.getDocument({
       data: upload.bytes,
