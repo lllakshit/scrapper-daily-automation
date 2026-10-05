@@ -69,15 +69,34 @@ export function ProfileSetup() {
     }).catch(() => undefined);
   }, []);
 
+  async function currentProfileRevision(): Promise<number> {
+    const response = await fetch("/api/profile", { cache: "no-store" });
+    if (!response.ok) return profileRevision;
+    const body = await response.json();
+    return typeof body.data?.revision === "number" ? body.data.revision : 0;
+  }
+
+  async function uploadWithRevision(revision: number) {
+    const data = new FormData();
+    data.set("resume", file!);
+    if (revision > 0) data.set("expectedRevision", String(revision));
+    return fetch("/api/resume", { method: "POST", body: data });
+  }
+
   async function upload() {
     if (!file) return;
     setUploading(true);
     try {
-      const data = new FormData();
-      data.set("resume", file);
-      if (profileRevision > 0) data.set("expectedRevision", String(profileRevision));
-      const response = await fetch("/api/resume", { method: "POST", body: data });
-      if (!response.ok) throw new Error();
+      let revision = await currentProfileRevision();
+      let response = await uploadWithRevision(revision);
+      if (!response.ok && [409, 500].includes(response.status)) {
+        revision = await currentProfileRevision();
+        response = await uploadWithRevision(revision);
+      }
+      if (!response.ok) {
+        const body = await response.json().catch(() => null);
+        throw new Error(body?.error?.message ?? "Upload failed");
+      }
       const body = await response.json();
       const record = body.data;
       setProfileRevision(record.revision);
@@ -86,8 +105,10 @@ export function ProfileSetup() {
       setEmail(record.value.personal.email || email);
       setSkills(Object.values(record.value.skills).flat() as string[]);
       toast.success("Resume uploaded", { description: "Review the extracted profile before approving it." });
-    } catch {
-      toast.error("Upload unavailable", { description: "Check the file and your storage configuration, then try again." });
+    } catch (error) {
+      toast.error("Upload unavailable", {
+        description: error instanceof Error ? error.message : "Check the file and try again.",
+      });
     } finally { setUploading(false); }
   }
 
