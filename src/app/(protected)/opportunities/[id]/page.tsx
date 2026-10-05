@@ -1,0 +1,17 @@
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { BriefcaseBusiness, Check, ExternalLink, MapPin, TriangleAlert } from "lucide-react";
+import { readLatestScan } from "@/lib/discovery";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { OpportunityActions } from "@/components/opportunity-actions";
+
+export const dynamic = "force-dynamic";
+
+export default async function OpportunityDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const match = (await readLatestScan())?.opportunities.find((item) => item.job.id === decodeURIComponent(id));
+  if (!match) notFound();
+  return <div className="pb-20 lg:pb-0"><Link href="/opportunities" className="mb-5 inline-flex min-h-11 items-center text-sm font-medium text-muted-foreground hover:text-foreground">Back to opportunities</Link><div className="flex flex-col gap-5 border-b pb-6 sm:flex-row sm:items-start sm:justify-between"><div><div className="mb-3 flex gap-2"><Badge>{match.classification}</Badge><Badge variant="outline">{match.score}% match</Badge></div><h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{match.job.title}</h1><p className="mt-3 flex items-center gap-2 text-muted-foreground"><BriefcaseBusiness className="size-4" />{match.job.company}</p><p className="mt-2 flex items-center gap-2 text-muted-foreground"><MapPin className="size-4" />{match.job.location} · {match.job.remoteType}</p></div><Button asChild variant="outline" size="lg" className="min-h-11"><a href={match.job.canonicalUrl} target="_blank" rel="noreferrer">View original listing<ExternalLink /></a></Button></div><div className="mt-6 grid gap-6 lg:grid-cols-[1.25fr_.75fr]"><div className="space-y-6"><Card><CardHeader><CardTitle>Why you match</CardTitle></CardHeader><CardContent className="space-y-3">{match.reasons.map((reason) => <p key={reason} className="flex gap-3 text-sm leading-6"><Check className="mt-0.5 size-5 shrink-0 text-success" />{reason}</p>)}</CardContent></Card><Card><CardHeader><CardTitle>Job description</CardTitle></CardHeader><CardContent><p className="whitespace-pre-wrap text-sm leading-7 text-muted-foreground">{match.job.description}</p></CardContent></Card></div><div className="space-y-6"><Card><CardHeader><CardTitle>Strong matches</CardTitle></CardHeader><CardContent className="space-y-3">{match.strengths?.length ? match.strengths.map((item) => <p key={item} className="flex items-center gap-2 text-sm"><Check className="size-4 text-success" />{item}</p>) : <p className="text-sm text-muted-foreground">See the match explanation for role-level strengths.</p>}</CardContent></Card><Card><CardHeader><CardTitle>Gaps & concerns</CardTitle></CardHeader><CardContent className="space-y-3">{match.gaps?.length ? match.gaps.map((item) => <p key={item} className="flex items-center gap-2 text-sm"><TriangleAlert className="size-4 text-warning" />{item}</p>) : <p className="flex items-center gap-2 text-sm text-muted-foreground"><Check className="size-4 text-success" />No major gaps detected.</p>}</CardContent></Card></div></div><div className="fixed inset-x-0 bottom-[4.6rem] z-40 border-t bg-background/95 p-3 backdrop-blur lg:static lg:mt-6 lg:border-0 lg:bg-transparent lg:p-0"><OpportunityActions job={match.job} /></div></div>;
+}
