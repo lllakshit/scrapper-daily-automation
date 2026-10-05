@@ -20,6 +20,9 @@ Local development stores state in `.data/`. Production uses Vercel Blob state wh
 - `CRON_SECRET` — protects scheduled scans
 - `AI_API_KEY`, `AI_MODEL`, `AI_API_URL` — optional OpenAI-compatible structured matching; deterministic ranking is the safe fallback
 - `APP_ORIGIN` — optional canonical deployment origin for same-origin validation
+- `RAPIDAPI_KEY` — optional; enables RapidAPI job searches for LinkedIn, Indeed, Glassdoor, Workday, Ashby, Greenhouse, Lever, and Wellfound
+- `RAPIDAPI_JOBS_HOST` — optional; defaults to `jsearch.p.rapidapi.com`
+- `RAPIDAPI_JOB_SOURCE_LIMIT` — optional; limits RapidAPI platform queries per scan, default `8`
 
 Never prefix secrets with `NEXT_PUBLIC_`.
 
@@ -40,6 +43,7 @@ Resume extraction is conservative. It never invents experience and requires expl
 - Exact and conservative cross-source duplicates are merged.
 - Each surfaced listing records multiple durable identity aliases. It remains in the decision queue until you save, prepare, or reject it, but URL variants, cross-posts, and unchanged reposts never return as new opportunities in a later scan.
 - One failing source does not cancel successful source results.
+- Built-in no-key sources are Remotive, Arbeitnow, and RemoteOK. RapidAPI platform sources are used only when `RAPIDAPI_KEY` is configured.
 - No application or follow-up is submitted automatically.
 
 ## Commands

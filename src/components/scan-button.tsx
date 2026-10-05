@@ -13,11 +13,12 @@ export function ScanButton() {
     setScanning(true);
     try {
       const response = await fetch("/api/scans", { method: "POST", headers: { "content-type": "application/json" }, body: "{}" });
-      if (!response.ok) throw new Error("Scan could not start");
+      const payload = await response.json().catch(() => null) as { error?: string } | null;
+      if (!response.ok) throw new Error(payload?.error ?? "Scan could not start");
       router.refresh();
       toast.success("Scan complete", { description: "Your review queue has been refreshed." });
-    } catch {
-      toast.error("Scan unavailable", { description: "Finish your profile and source setup, then try again." });
+    } catch (error) {
+      toast.error("Scan unavailable", { description: error instanceof Error ? error.message : "Try again." });
     } finally {
       setScanning(false);
     }

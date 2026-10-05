@@ -1,4 +1,4 @@
-import { ArbeitnowAdapter, RemotiveAdapter } from "@/lib/scrapers";
+import { ArbeitnowAdapter, configuredRapidApiJobAdapters, RemotiveAdapter, RemoteOkAdapter } from "@/lib/scrapers";
 import { profileRepository } from "@/lib/profile/repository";
 import { getJsonStore } from "@/lib/storage";
 import { createDeterministicMatcher } from "@/lib/matching";
@@ -87,7 +87,12 @@ export async function runConfiguredScan(): Promise<JobScanResult> {
   const aiProvider = configuredAiProvider();
   const state = (await getJsonStore().read<DiscoveryState>(DISCOVERY_STATE_KEY, { schemaVersion: 1 }))?.value ?? EMPTY_DISCOVERY_STATE;
   const result = await runJobScan({
-    adapters: [new RemotiveAdapter(), new ArbeitnowAdapter({ maxPages: 2 })],
+    adapters: [
+      new RemotiveAdapter(),
+      new ArbeitnowAdapter({ maxPages: 2 }),
+      new RemoteOkAdapter(),
+      ...configuredRapidApiJobAdapters(jobPreferences),
+    ],
     preferences: jobPreferences,
     matcher: aiProvider
       ? createAiJobMatcher(aiProvider, profile)

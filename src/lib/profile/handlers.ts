@@ -177,7 +177,7 @@ export function createProfileApi(dependencies: ProfileApiDependencies) {
       safely(async () => {
         await dependencies.authenticate(request);
         dependencies.assertMutationOrigin(request);
-        const input = approvalRequest.parse(await readJsonBody(request));
+        approvalRequest.parse(await readJsonBody(request));
         const current = await dependencies.repository.readProfile();
         if (!current) throw new ProfileNotFoundError();
         const approved = approveCareerProfile(current.value, dependencies.now());

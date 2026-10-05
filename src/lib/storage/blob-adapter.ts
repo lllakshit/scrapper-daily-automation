@@ -33,6 +33,7 @@ export class VercelBlobStorageAdapter implements StorageAdapter {
 
   async write(key: string, content: string, options: RawWriteOptions): Promise<void> {
     this.assertConfigured();
+    void options;
     try {
       await put(this.pathname(key), content, {
         access: "public",
