@@ -125,7 +125,7 @@ export class RapidApiJobsAdapter implements JobSourceAdapter {
         "X-RapidAPI-Host": this.apiHost,
       },
       redirect: "error",
-      signal: AbortSignal.timeout(15_000),
+      signal: AbortSignal.timeout(8_000),
     });
     const payload = RapidApiResponseSchema.parse(await requireJson(response, this.name));
     return payload.data.flatMap((value) => {

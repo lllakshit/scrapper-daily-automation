@@ -22,14 +22,20 @@ const RemoteOkJobSchema = z.object({
 
 export type RemoteOkJob = z.infer<typeof RemoteOkJobSchema>;
 
+interface RemoteOkOptions extends AdapterOptions {
+  readonly maxJobs?: number;
+}
+
 export class RemoteOkAdapter implements JobSourceAdapter {
   readonly name = "remoteok";
   private readonly request: typeof fetch;
   private readonly now: () => Date;
+  private readonly maxJobs: number;
 
-  constructor(options: AdapterOptions = {}) {
+  constructor(options: RemoteOkOptions = {}) {
     this.request = options.fetch ?? fetch;
     this.now = options.now ?? (() => new Date());
+    this.maxJobs = Math.max(1, Math.min(options.maxJobs ?? 80, 500));
   }
 
   parseJob(value: unknown): RemoteOkJob | null {
@@ -71,10 +77,10 @@ export class RemoteOkAdapter implements JobSourceAdapter {
     const response = await this.request("https://remoteok.com/api", {
       headers: { Accept: "application/json", "User-Agent": "CareerAutopilot/1.0" },
       redirect: "error",
-      signal: AbortSignal.timeout(15_000),
+      signal: AbortSignal.timeout(8_000),
     });
     const payload = z.array(z.unknown()).parse(await requireJson(response, this.name));
-    return payload.flatMap((value) => {
+    return payload.slice(0, this.maxJobs).flatMap((value) => {
       const parsed = this.parseJob(value);
       return parsed ? [this.normalizeJob(parsed)] : [];
     });

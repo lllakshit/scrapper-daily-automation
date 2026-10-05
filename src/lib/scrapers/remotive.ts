@@ -22,14 +22,20 @@ const RemotiveJobSchema = z.object({
 const RemotiveResponseSchema = z.object({ jobs: z.array(z.unknown()) });
 export type RemotiveJob = z.infer<typeof RemotiveJobSchema>;
 
+interface RemotiveOptions extends AdapterOptions {
+  readonly maxJobs?: number;
+}
+
 export class RemotiveAdapter implements JobSourceAdapter {
   readonly name = "remotive";
   private readonly request: typeof fetch;
   private readonly now: () => Date;
+  private readonly maxJobs: number;
 
-  constructor(options: AdapterOptions = {}) {
+  constructor(options: RemotiveOptions = {}) {
     this.request = options.fetch ?? fetch;
     this.now = options.now ?? (() => new Date());
+    this.maxJobs = Math.max(1, Math.min(options.maxJobs ?? 80, 500));
   }
 
   parseJob(value: unknown): RemotiveJob | null {
@@ -68,10 +74,10 @@ export class RemotiveAdapter implements JobSourceAdapter {
     const response = await this.request("https://remotive.com/api/remote-jobs", {
       headers: { Accept: "application/json" },
       redirect: "error",
-      signal: AbortSignal.timeout(15_000),
+      signal: AbortSignal.timeout(8_000),
     });
     const payload = RemotiveResponseSchema.parse(await requireJson(response, this.name));
-    return payload.jobs.flatMap((value) => {
+    return payload.jobs.slice(0, this.maxJobs).flatMap((value) => {
       const parsed = this.parseJob(value);
       return parsed ? [this.normalizeJob(parsed)] : [];
     });

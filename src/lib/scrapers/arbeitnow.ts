@@ -27,6 +27,7 @@ export type ArbeitnowJob = z.infer<typeof ArbeitnowJobSchema>;
 
 interface ArbeitnowOptions extends AdapterOptions {
   readonly maxPages?: number;
+  readonly maxJobs?: number;
 }
 
 export class ArbeitnowAdapter implements JobSourceAdapter {
@@ -34,11 +35,13 @@ export class ArbeitnowAdapter implements JobSourceAdapter {
   private readonly request: typeof fetch;
   private readonly now: () => Date;
   private readonly maxPages: number;
+  private readonly maxJobs: number;
 
   constructor(options: ArbeitnowOptions = {}) {
     this.request = options.fetch ?? fetch;
     this.now = options.now ?? (() => new Date());
     this.maxPages = Math.max(1, Math.min(options.maxPages ?? 2, 10));
+    this.maxJobs = Math.max(1, Math.min(options.maxJobs ?? 80, 500));
   }
 
   parseJob(value: unknown): ArbeitnowJob | null {
@@ -89,18 +92,18 @@ export class ArbeitnowAdapter implements JobSourceAdapter {
   async fetchJobs(): Promise<readonly NormalizedJob[]> {
     const jobs: NormalizedJob[] = [];
     let next: string | null = "https://www.arbeitnow.com/api/job-board-api";
-    for (let page = 0; page < this.maxPages && next; page += 1) {
+    for (let page = 0; page < this.maxPages && next && jobs.length < this.maxJobs; page += 1) {
       const response = await this.request(this.validatePageUrl(next), {
         headers: { Accept: "application/json" },
         redirect: "error",
-        signal: AbortSignal.timeout(15_000),
+        signal: AbortSignal.timeout(8_000),
       });
       const payload = ArbeitnowResponseSchema.parse(await requireJson(response, this.name));
       const normalized = payload.data.flatMap((value) => {
         const parsed = this.parseJob(value);
         return parsed ? [this.normalizeJob(parsed)] : [];
       });
-      jobs.push(...normalized);
+      jobs.push(...normalized.slice(0, this.maxJobs - jobs.length));
       next = payload.links?.next ?? null;
     }
     return jobs;

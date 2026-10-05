@@ -88,9 +88,9 @@ export async function runConfiguredScan(): Promise<JobScanResult> {
   const state = (await getJsonStore().read<DiscoveryState>(DISCOVERY_STATE_KEY, { schemaVersion: 1 }))?.value ?? EMPTY_DISCOVERY_STATE;
   const result = await runJobScan({
     adapters: [
-      new RemotiveAdapter(),
-      new ArbeitnowAdapter({ maxPages: 2 }),
-      new RemoteOkAdapter(),
+      new RemotiveAdapter({ maxJobs: 60 }),
+      new ArbeitnowAdapter({ maxPages: 1, maxJobs: 60 }),
+      new RemoteOkAdapter({ maxJobs: 60 }),
       ...configuredRapidApiJobAdapters(jobPreferences),
     ],
     preferences: jobPreferences,
