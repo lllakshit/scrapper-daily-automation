@@ -29,7 +29,10 @@ function createDefaultStore(): VersionedJsonStore {
     return new VersionedJsonStore(new InMemoryStorageAdapter());
   }
   if (process.env.VERCEL === "1") {
-    return new VersionedJsonStore(new VercelBlobStorageAdapter());
+    if (process.env.BLOB_READ_WRITE_TOKEN || process.env.BLOB_STORE_ID) {
+      return new VersionedJsonStore(new VercelBlobStorageAdapter());
+    }
+    return new VersionedJsonStore(new InMemoryStorageAdapter());
   }
   const directory = process.env.APP_DATA_DIRECTORY
     ? path.resolve(process.env.APP_DATA_DIRECTORY)

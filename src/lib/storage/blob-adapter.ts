@@ -16,8 +16,8 @@ export class VercelBlobStorageAdapter implements StorageAdapter {
   }
 
   private assertConfigured(): void {
-    if (!process.env.BLOB_READ_WRITE_TOKEN) {
-      throw new Error("BLOB_READ_WRITE_TOKEN is required on Vercel");
+    if (!process.env.BLOB_READ_WRITE_TOKEN && !process.env.BLOB_STORE_ID) {
+      throw new Error("BLOB_READ_WRITE_TOKEN or BLOB_STORE_ID is required on Vercel");
     }
   }
 

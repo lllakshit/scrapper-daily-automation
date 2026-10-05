@@ -64,11 +64,22 @@ describe("VercelBlobStorageAdapter", () => {
 
   it("reports missing Vercel Blob configuration only when storage is used", async () => {
     vi.stubEnv("BLOB_READ_WRITE_TOKEN", "");
+    vi.stubEnv("BLOB_STORE_ID", "");
     const adapter = new VercelBlobStorageAdapter();
 
     await expect(adapter.read("profile")).rejects.toThrow(
-      "BLOB_READ_WRITE_TOKEN is required on Vercel",
+      "BLOB_READ_WRITE_TOKEN or BLOB_STORE_ID is required on Vercel",
     );
     expect(blobMocks.get).not.toHaveBeenCalled();
+  });
+
+  it("allows OIDC-backed Blob configuration with a store id", async () => {
+    vi.stubEnv("BLOB_READ_WRITE_TOKEN", "");
+    vi.stubEnv("BLOB_STORE_ID", "store_test");
+    blobMocks.get.mockResolvedValue(null);
+    const adapter = new VercelBlobStorageAdapter();
+
+    await expect(adapter.read("profile")).resolves.toBeNull();
+    expect(blobMocks.get).toHaveBeenCalled();
   });
 });

@@ -9,14 +9,14 @@ A private, single-user career workflow for Lakshit. It discovers legitimate publ
 3. Start the app: `npm run dev`
 4. Open the displayed local URL and sign in with `APP_EMAIL` plus the configured password.
 
-Local development stores state in `.data/`. Production uses private Vercel Blob state and requires `BLOB_READ_WRITE_TOKEN`.
+Local development stores state in `.data/`. Production uses private Vercel Blob state when `BLOB_READ_WRITE_TOKEN` or `BLOB_STORE_ID` is configured. Without Blob credentials, the app falls back to per-instance memory so the UI can run, but seen jobs and profile data are not durable across cold starts or redeploys.
 
 ## Required Vercel environment variables
 
 - `APP_EMAIL` — the only permitted account email
 - `APP_PASSWORD_HASH` — recommended scrypt password hash; `APP_PASSWORD` is supported for initial setup
 - `APP_SESSION_SECRET` (or `SESSION_SECRET`) — random secret containing at least 32 bytes
-- `BLOB_READ_WRITE_TOKEN` — Vercel Blob token
+- `BLOB_READ_WRITE_TOKEN` or `BLOB_STORE_ID` — Vercel Blob storage for durable production state
 - `CRON_SECRET` — protects scheduled scans
 - `AI_API_KEY`, `AI_MODEL`, `AI_API_URL` — optional OpenAI-compatible structured matching; deterministic ranking is the safe fallback
 - `APP_ORIGIN` — optional canonical deployment origin for same-origin validation
