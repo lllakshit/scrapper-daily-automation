@@ -170,7 +170,9 @@ export function configuredRapidApiJobAdapters(preferences: JobPreferences): read
   const apiKey = process.env.RAPIDAPI_KEY?.trim();
   if (!apiKey) return [];
   const apiHost = process.env.RAPIDAPI_JOBS_HOST?.trim() || DEFAULT_HOST;
-  const limit = Math.max(1, Math.min(Number(process.env.RAPIDAPI_JOB_SOURCE_LIMIT ?? "8"), RAPIDAPI_JOB_PLATFORMS.length));
+  const configuredLimit = Number(process.env.RAPIDAPI_JOB_SOURCE_LIMIT ?? "8");
+  const limit = Math.max(0, Math.min(Number.isFinite(configuredLimit) ? configuredLimit : 8, RAPIDAPI_JOB_PLATFORMS.length));
+  if (limit === 0) return [];
   return RAPIDAPI_JOB_PLATFORMS.slice(0, limit).map(
     (platform) => new RapidApiJobsAdapter({ apiKey, apiHost, platform, preferences }),
   );

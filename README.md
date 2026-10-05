@@ -22,7 +22,7 @@ Local development stores state in `.data/`. Production uses Vercel Blob state wh
 - `APP_ORIGIN` — optional canonical deployment origin for same-origin validation
 - `RAPIDAPI_KEY` — optional; enables RapidAPI job searches for LinkedIn, Indeed, Glassdoor, Workday, Ashby, Greenhouse, Lever, and Wellfound
 - `RAPIDAPI_JOBS_HOST` — optional; defaults to `jsearch.p.rapidapi.com`
-- `RAPIDAPI_JOB_SOURCE_LIMIT` — optional; limits RapidAPI platform queries per scan, default `8`
+- `RAPIDAPI_JOB_SOURCE_LIMIT` — optional; limits RapidAPI platform queries per scan, default `8`; set `0` to use only open/free sources
 
 Never prefix secrets with `NEXT_PUBLIC_`.
 
