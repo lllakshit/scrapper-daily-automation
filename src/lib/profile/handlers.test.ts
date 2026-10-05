@@ -134,7 +134,7 @@ describe("profile API", () => {
     expect(deps.repository.writeProfile).toHaveBeenCalledWith(profile, 0);
   });
 
-  it("saves a private resume artifact reference with the extracted profile", async () => {
+  it("saves a public resume artifact reference with the extracted profile", async () => {
     const profile = {
       ...createEmptyCareerProfile("2026-10-03T10:00:00.000Z"),
       resumeSource: {

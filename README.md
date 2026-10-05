@@ -9,7 +9,7 @@ A private, single-user career workflow for Lakshit. It discovers legitimate publ
 3. Start the app: `npm run dev`
 4. Open the displayed local URL and sign in with `APP_EMAIL` plus the configured password.
 
-Local development stores state in `.data/`. Production uses private Vercel Blob state when `BLOB_READ_WRITE_TOKEN` or `BLOB_STORE_ID` is configured. Resume uploads are also written to private Blob paths under `career-autopilot/resumes/`. Without Blob credentials, the app falls back to per-instance memory so the UI can run, but seen jobs, profile data, and resume artifacts are not durable across cold starts or redeploys.
+Local development stores state in `.data/`. Production uses Vercel Blob state when `BLOB_READ_WRITE_TOKEN` or `BLOB_STORE_ID` is configured. Resume uploads are also written to Blob paths under `career-autopilot/resumes/`. Without Blob credentials, the app falls back to per-instance memory so the UI can run, but seen jobs, profile data, and resume artifacts are not durable across cold starts or redeploys.
 
 ## Required Vercel environment variables
 

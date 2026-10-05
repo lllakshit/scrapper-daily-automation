@@ -27,7 +27,7 @@ describe("VercelBlobResumeArtifactStore", () => {
     expect(blobMocks.put).not.toHaveBeenCalled();
   });
 
-  it("stores resumes in private Blob storage with deterministic paths", async () => {
+  it("stores resumes in public Blob storage with deterministic paths", async () => {
     vi.stubEnv("BLOB_READ_WRITE_TOKEN", "test-token");
     blobMocks.put.mockResolvedValue({ pathname: "career-autopilot/resumes/file.pdf" });
     const store = new VercelBlobResumeArtifactStore();
@@ -39,7 +39,7 @@ describe("VercelBlobResumeArtifactStore", () => {
       `career-autopilot/resumes/${"a".repeat(64)}.pdf`,
       Buffer.from(upload.bytes),
       expect.objectContaining({
-        access: "private",
+        access: "public",
         addRandomSuffix: false,
         allowOverwrite: true,
         contentType: "application/pdf",

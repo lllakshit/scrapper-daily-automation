@@ -23,7 +23,7 @@ export class VercelBlobStorageAdapter implements StorageAdapter {
 
   async read(key: string): Promise<RawStoredValue | null> {
     this.assertConfigured();
-    const result = await get(this.pathname(key), { access: "private", useCache: false });
+    const result = await get(this.pathname(key), { access: "public", useCache: false });
     if (!result || result.statusCode === 304 || !result.stream) return null;
     return {
       content: await new Response(result.stream).text(),
@@ -35,7 +35,7 @@ export class VercelBlobStorageAdapter implements StorageAdapter {
     this.assertConfigured();
     try {
       await put(this.pathname(key), content, {
-        access: "private",
+        access: "public",
         addRandomSuffix: false,
         allowOverwrite: options.expectedVersionTag !== null,
         contentType: "application/json; charset=utf-8",

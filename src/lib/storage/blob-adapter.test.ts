@@ -21,7 +21,7 @@ describe("VercelBlobStorageAdapter", () => {
     vi.stubEnv("BLOB_READ_WRITE_TOKEN", "test-blob-token");
   });
 
-  it("reads private, uncached JSON", async () => {
+  it("reads public, uncached JSON", async () => {
     blobMocks.get.mockResolvedValue({
       statusCode: 200,
       stream: new Response('{"ok":true}').body,
@@ -34,7 +34,7 @@ describe("VercelBlobStorageAdapter", () => {
       versionTag: "etag-1",
     });
     expect(blobMocks.get).toHaveBeenCalledWith("career-autopilot/data/profile.json", {
-      access: "private",
+      access: "public",
       useCache: false,
     });
   });
@@ -46,7 +46,7 @@ describe("VercelBlobStorageAdapter", () => {
     expect(blobMocks.put).toHaveBeenCalledWith(
       "career-autopilot/data/profile.json",
       "{}",
-      expect.objectContaining({ access: "private", ifMatch: "etag-1" }),
+      expect.objectContaining({ access: "public", ifMatch: "etag-1" }),
     );
 
     blobMocks.put.mockRejectedValue(new BlobPreconditionFailedError());
